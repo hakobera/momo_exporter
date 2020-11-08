@@ -8,21 +8,19 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"sync"
 	"time"
-	"sort"
-	"strconv"
-	"strings"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/iancoleman/strcase"
 	"github.com/koron/go-dproxy"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/promlog"
 	"github.com/prometheus/common/promlog/flag"
 	"github.com/prometheus/common/version"
-	"github.com/iancoleman/strcase"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -30,69 +28,14 @@ const (
 	namespace = "momo"
 )
 
-// https://www.w3.org/TR/webrtc-stats/#rtctatstype-*
-var (
-	codecLabelNames = []string{"codec"}
-/*
-"codec",
-"inbound-rtp",
-"outbound-rtp",
-"remote-inbound-rtp",
-"remote-outbound-rtp",
-"media-source",
-"csrc",
-"peer-connection",
-"data-channel",
-"stream",
-"track",
-"transceiver",
-"sender",
-"receiver",
-"transport",
-"sctp-transport",
-"candidate-pair",
-"local-candidate",
-"remote-candidate",
-"certificate",
-"ice-server"
-*/
-)
-
 type metricInfo struct {
 	Desc *prometheus.Desc
 	Type prometheus.ValueType
 }
 
-func newCodecMetric(metricName string, docString string, t prometheus.ValueType, constLabels prometheus.Labels) metricInfo {
-	return metricInfo{
-		Desc: prometheus.NewDesc(
-			prometheus.BuildFQName(namespace, "codec", metricName),
-			docString,
-			codecLabelNames,
-			constLabels,
-		),
-		Type: t,
-	}
-}
-
-type metrics map[int]metricInfo
-
-func (m metrics) String() string {
-	keys := make([]int, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Ints(keys)
-	s := make([]string, len(keys))
-	for i, k := range keys {
-		s[i] = strconv.Itoa(k)
-	}
-	return strings.Join(s, ",")
-}
-
 var (
 	momoInfo = prometheus.NewDesc(prometheus.BuildFQName(namespace, "version", "info"), "WebRTC Native Client Momo version info.", []string{"version", "environment", "libwebrtc"}, nil)
-	momoUp = prometheus.NewDesc(prometheus.BuildFQName(namespace, "", "up"), "Was the last scrape of WebRTC Native Client Momo successful.", nil, nil)
+	momoUp   = prometheus.NewDesc(prometheus.BuildFQName(namespace, "", "up"), "Was the last scrape of WebRTC Native Client Momo successful.", nil, nil)
 )
 
 // Exporter collects momo stats from given URI and exports them using
@@ -102,11 +45,11 @@ type Exporter struct {
 	mutex     sync.RWMutex
 	fetchStat func() (io.ReadCloser, error)
 
-	up            prometheus.Gauge
-	totalScrapes  prometheus.Counter
+	up                prometheus.Gauge
+	totalScrapes      prometheus.Counter
 	jsonParseFailures prometheus.Counter
-	serverMetrics map[int]metricInfo
-	logger        log.Logger
+	serverMetrics     map[int]metricInfo
+	logger            log.Logger
 }
 
 // NewExporter returns an intialized Exporter.
@@ -188,13 +131,6 @@ func fetchHTTP(uri string, sslVerify bool, timeout time.Duration) func() (io.Rea
 	}
 }
 
-type MomoMetrics struct {
-	Version string `json:"version"`
-	Environment string `json:"environment"`
-	Libwebrtc string `json:"libwebrtc"`
-	Stats string `json:"stats"`
-}
-
 func (e *Exporter) scrape(ch chan<- prometheus.Metric) (up float64) {
 	e.totalScrapes.Inc()
 
@@ -209,7 +145,7 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) (up float64) {
 	err = json.NewDecoder(body).Decode(&metrics)
 	if err != nil {
 		level.Error(e.logger).Log("msg", "Failed to parse response from WebRTC Native Client Momo", "err", err)
-		e.jsonParseFailures.Inc()	
+		e.jsonParseFailures.Inc()
 		return 0
 	}
 
@@ -223,7 +159,7 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) (up float64) {
 	stats, err := dproxy.New(v).Array()
 	if err != nil {
 		level.Error(e.logger).Log("msg", "Failed to parse WebRTC stats", "err", err)
-		e.jsonParseFailures.Inc()	
+		e.jsonParseFailures.Inc()
 		return 0
 	}
 
@@ -244,6 +180,7 @@ func (e *Exporter) parseStats(stats interface{}, ch chan<- prometheus.Metric) {
 	}
 	level.Info(e.logger).Log("type", t)
 
+	// https://www.w3.org/TR/webrtc-stats/#summary
 	switch t {
 	case "codec":
 		e.exportCodecMetrics(s, ch)
@@ -256,13 +193,13 @@ func (e *Exporter) parseStats(stats interface{}, ch chan<- prometheus.Metric) {
 
 func (e *Exporter) exportCodecMetrics(m dproxy.Proxy, ch chan<- prometheus.Metric) {
 	id, _ := m.M("id").String()
-	desc:= prometheus.NewDesc(
-			prometheus.BuildFQName(namespace, "codec", id),
-			"",
-			[]string{"id", "payload_type", "mime_type", "clock_rate"},
-			nil,
-		)
-	
+	desc := prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "codec", id),
+		"",
+		[]string{"id", "payload_type", "mime_type", "clock_rate"},
+		nil,
+	)
+
 	payloadTypeValue, _ := m.M("payloadType").Float64()
 	payloadType, _ := m.M("payloadType").Int64()
 	mimeType, _ := m.M("mimeType").String()
@@ -277,7 +214,7 @@ func (e *Exporter) exportDataChannelMetrics(m dproxy.Proxy, ch chan<- prometheus
 
 	for _, name := range names {
 		desc := prometheus.NewDesc(
-			prometheus.BuildFQName(namespace, "datachannel", name + "_total"),
+			prometheus.BuildFQName(namespace, "datachannel", name+"_total"),
 			"",
 			[]string{"id", "label"},
 			nil,
@@ -293,7 +230,7 @@ func (e *Exporter) exportTransportMetrics(m dproxy.Proxy, ch chan<- prometheus.M
 
 	for _, name := range names {
 		desc := prometheus.NewDesc(
-			prometheus.BuildFQName(namespace, "transport", name + "_total"),
+			prometheus.BuildFQName(namespace, "transport", name+"_total"),
 			"",
 			[]string{"id"},
 			nil,
