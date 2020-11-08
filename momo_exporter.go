@@ -10,9 +10,13 @@ import (
 	"os"
 	"sync"
 	"time"
+	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/koron/go-dproxy"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/promlog"
@@ -25,14 +29,68 @@ const (
 	namespace = "momo"
 )
 
+// https://www.w3.org/TR/webrtc-stats/#rtctatstype-*
+var (
+	codecLabelNames = []string{"codec"}
+/*
+"codec",
+"inbound-rtp",
+"outbound-rtp",
+"remote-inbound-rtp",
+"remote-outbound-rtp",
+"media-source",
+"csrc",
+"peer-connection",
+"data-channel",
+"stream",
+"track",
+"transceiver",
+"sender",
+"receiver",
+"transport",
+"sctp-transport",
+"candidate-pair",
+"local-candidate",
+"remote-candidate",
+"certificate",
+"ice-server"
+*/
+)
+
 type metricInfo struct {
 	Desc *prometheus.Desc
 	Type prometheus.ValueType
 }
 
+func newCodecMetric(metricName string, docString string, t prometheus.ValueType, constLabels prometheus.Labels) metricInfo {
+	return metricInfo{
+		Desc: prometheus.NewDesc(
+			prometheus.BuildFQName(namespace, "codec", metricName),
+			docString,
+			codecLabelNames,
+			constLabels,
+		),
+		Type: t,
+	}
+}
+
 type metrics map[int]metricInfo
 
+func (m metrics) String() string {
+	keys := make([]int, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+	s := make([]string, len(keys))
+	for i, k := range keys {
+		s[i] = strconv.Itoa(k)
+	}
+	return strings.Join(s, ",")
+}
+
 var (
+	momoInfo = prometheus.NewDesc(prometheus.BuildFQName(namespace, "version", "info"), "WebRTC Native Client Momo version info.", []string{"version", "environment", "libwebrtc"}, nil)
 	momoUp = prometheus.NewDesc(prometheus.BuildFQName(namespace, "", "up"), "Was the last scrape of WebRTC Native Client Momo successful.", nil, nil)
 )
 
@@ -45,6 +103,7 @@ type Exporter struct {
 
 	up            prometheus.Gauge
 	totalScrapes  prometheus.Counter
+	jsonParseFailures prometheus.Counter
 	serverMetrics map[int]metricInfo
 	logger        log.Logger
 }
@@ -77,6 +136,11 @@ func NewExporter(uri string, sslVerify bool, timeout time.Duration, logger log.L
 			Name:      "exporter_scrapes_total",
 			Help:      "Current total momo scrapse.",
 		}),
+		jsonParseFailures: prometheus.NewCounter(prometheus.CounterOpts{
+			Namespace: namespace,
+			Name:      "exporter_json_parse_failures_total",
+			Help:      "Number of failures while parsing JSON.",
+		}),
 		logger: logger,
 	}, nil
 }
@@ -84,8 +148,10 @@ func NewExporter(uri string, sslVerify bool, timeout time.Duration, logger log.L
 // Describe describes all the metrics ever exported by the Momo exporter.
 // It implements prometheus.Collector.
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
+	ch <- momoInfo
 	ch <- momoUp
 	ch <- e.totalScrapes.Desc()
+	ch <- e.jsonParseFailures.Desc()
 }
 
 // Collect fetches the stats from configured WebRTC Native Client Momo location
@@ -98,6 +164,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 	ch <- prometheus.MustNewConstMetric(momoUp, prometheus.GaugeValue, up)
 	ch <- e.totalScrapes
+	ch <- e.jsonParseFailures
 }
 
 func fetchHTTP(uri string, sslVerify bool, timeout time.Duration) func() (io.ReadCloser, error) {
@@ -120,15 +187,12 @@ func fetchHTTP(uri string, sslVerify bool, timeout time.Duration) func() (io.Rea
 	}
 }
 
-type MomoStats struct {
+type MomoMetrics struct {
+	Version string `json:"version"`
+	Environment string `json:"environment"`
+	Libwebrtc string `json:"libwebrtc"`
 	Stats string `json:"stats"`
 }
-
-/*
-type PeerConnectionStats struct {
-	Stats map[string]interface{}
-}
-*/
 
 func (e *Exporter) scrape(ch chan<- prometheus.Metric) (up float64) {
 	e.totalScrapes.Inc()
@@ -140,19 +204,65 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) (up float64) {
 	}
 	defer body.Close()
 
-	var stats MomoStats
-	err = json.NewDecoder(body).Decode(&stats)
+	var metrics MomoMetrics
+	err = json.NewDecoder(body).Decode(&metrics)
 	if err != nil {
 		level.Error(e.logger).Log("msg", "Failed to parse response from WebRTC Native Client Momo", "err", err)
+		e.jsonParseFailures.Inc()	
 		return 0
 	}
-	level.Debug(e.logger).Log("msg", stats.Stats)
+
+	ch <- prometheus.MustNewConstMetric(momoInfo, prometheus.GaugeValue, 1, metrics.Version, metrics.Environment, metrics.Libwebrtc)
+
+	level.Debug(e.logger).Log("msg", metrics.Stats)
+
+	var v interface{}
+	json.Unmarshal([]byte(metrics.Stats), &v)
+
+	stats, err := dproxy.New(v).Array()
+	if err != nil {
+		level.Error(e.logger).Log("msg", "Failed to parse WebRTC stats", "err", err)
+		e.jsonParseFailures.Inc()	
+		return 0
+	}
+
+	for _, s := range stats {
+		e.parseStats(s, ch)
+	}
 
 	return 1
 }
 
-type versionInfo struct {
-	Version string
+func (e *Exporter) parseStats(stats interface{}, ch chan<- prometheus.Metric) {
+	s := dproxy.New(stats)
+	t, err := s.M("type").String()
+	if err != nil {
+		level.Error(e.logger).Log("msg", "stats must have 'type' field", "err", err)
+		e.jsonParseFailures.Inc()
+		return
+	}
+	level.Info(e.logger).Log("type", t)
+
+	switch t {
+	case "codec":
+		e.exportCodecMetrics(s, ch)
+	}
+}
+
+func (e *Exporter) exportCodecMetrics(m dproxy.Proxy, ch chan<- prometheus.Metric) {
+	id, _ := m.M("id").String()
+	desc:= prometheus.NewDesc(
+			prometheus.BuildFQName(namespace, "codec", id),
+			"",
+			[]string{"id", "payload_type", "mime_type", "clock_rate"},
+			nil,
+		)
+	
+	payloadTypeValue, _ := m.M("payloadType").Float64()
+	payloadType, _ := m.M("payloadType").Int64()
+	mimeType, _ := m.M("mimeType").String()
+	clockRate, _ := m.M("clockRate").Int64()
+	ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, payloadTypeValue, id, strconv.FormatInt(payloadType, 10), mimeType, strconv.FormatInt(clockRate, 10))
 }
 
 func main() {
@@ -182,7 +292,7 @@ func main() {
 	prometheus.MustRegister(exporter)
 	prometheus.MustRegister(version.NewCollector("momo_exporter"))
 
-	level.Info(logger).Log("ms", "Listening on address", "address", *listenAddress)
+	level.Info(logger).Log("msg", "Listening on address", "address", *listenAddress)
 	http.Handle(*metricsPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
