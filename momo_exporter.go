@@ -247,9 +247,10 @@ func (e *Exporter) parseStats(stats interface{}, ch chan<- prometheus.Metric) {
 	switch t {
 	case "codec":
 		e.exportCodecMetrics(s, ch)
-	
 	case "data-channel":
 		e.exportDataChannelMetrics(s, ch)
+	case "transport":
+		e.exportTransportMetrics(s, ch)
 	}
 }
 
@@ -283,6 +284,22 @@ func (e *Exporter) exportDataChannelMetrics(m dproxy.Proxy, ch chan<- prometheus
 		)
 		val, _ := m.M(strcase.ToLowerCamel(name)).Float64()
 		ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, val, id, label)
+	}
+}
+
+func (e *Exporter) exportTransportMetrics(m dproxy.Proxy, ch chan<- prometheus.Metric) {
+	id, _ := m.M("id").String()
+	names := []string{"bytes_sent", "bytes_received", "packets_sent", "packets_received"}
+
+	for _, name := range names {
+		desc := prometheus.NewDesc(
+			prometheus.BuildFQName(namespace, "transport", name + "_total"),
+			"",
+			[]string{"id"},
+			nil,
+		)
+		val, _ := m.M(strcase.ToLowerCamel(name)).Float64()
+		ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, val, id)
 	}
 }
 
