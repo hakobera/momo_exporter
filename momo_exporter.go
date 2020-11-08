@@ -22,6 +22,7 @@ import (
 	"github.com/prometheus/common/promlog"
 	"github.com/prometheus/common/promlog/flag"
 	"github.com/prometheus/common/version"
+	"github.com/iancoleman/strcase"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -246,6 +247,9 @@ func (e *Exporter) parseStats(stats interface{}, ch chan<- prometheus.Metric) {
 	switch t {
 	case "codec":
 		e.exportCodecMetrics(s, ch)
+	
+	case "data-channel":
+		e.exportDataChannelMetrics(s, ch)
 	}
 }
 
@@ -263,6 +267,23 @@ func (e *Exporter) exportCodecMetrics(m dproxy.Proxy, ch chan<- prometheus.Metri
 	mimeType, _ := m.M("mimeType").String()
 	clockRate, _ := m.M("clockRate").Int64()
 	ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, payloadTypeValue, id, strconv.FormatInt(payloadType, 10), mimeType, strconv.FormatInt(clockRate, 10))
+}
+
+func (e *Exporter) exportDataChannelMetrics(m dproxy.Proxy, ch chan<- prometheus.Metric) {
+	id, _ := m.M("id").String()
+	label, _ := m.M("label").String()
+	names := []string{"message_sent", "message_received", "bytes_sent", "bytes_received"}
+
+	for _, name := range names {
+		desc := prometheus.NewDesc(
+			prometheus.BuildFQName(namespace, "datachannel", name + "_total"),
+			"",
+			[]string{"id", "label"},
+			nil,
+		)
+		val, _ := m.M(strcase.ToLowerCamel(name)).Float64()
+		ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, val, id, label)
+	}
 }
 
 func main() {
