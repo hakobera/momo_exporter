@@ -186,6 +186,8 @@ func (e *Exporter) parseStats(stats interface{}, ch chan<- prometheus.Metric) {
 		e.exportCodecMetrics(s, ch)
 	case "data-channel":
 		e.exportDataChannelMetrics(s, ch)
+	case "peer-connection":
+		e.exportPeerConnectionMetrics(s, ch)
 	case "transport":
 		e.exportTransportMetrics(s, ch)
 	}
@@ -209,6 +211,15 @@ func (e *Exporter) exportDataChannelMetrics(m dproxy.Proxy, ch chan<- prometheus
 	for key, metric := range dataChannelMetrics {
 		val, _ := m.M(strcase.ToLowerCamel(key)).Float64()
 		ch <- prometheus.MustNewConstMetric(metric.Desc, metric.Type, val, id, label)
+	}
+}
+
+func (e *Exporter) exportPeerConnectionMetrics(m dproxy.Proxy, ch chan<- prometheus.Metric) {
+	id, _ := m.M("id").String()
+
+	for key, metric := range peerConnectionMetrics {
+		val, _ := m.M(strcase.ToLowerCamel(key)).Float64()
+		ch <- prometheus.MustNewConstMetric(metric.Desc, metric.Type, val, id)
 	}
 }
 
@@ -239,13 +250,21 @@ var (
 		"messagesReceived": newDataChannelMetric("messages_received_total", "Represents the total number of API \"message\" events received.", prometheus.CounterValue, nil),
 	}
 
+	// https://www.w3.org/TR/webrtc-stats/#dom-rtcpeerconnectionstats
+	peerConnectionLabelNames = []string{"id"}
+	peerConnectionMetrics    = metrics{
+		"dataChannelsOpened": newPeerConnectionMetric("data_channels_opened_total", "Represents the number of unique RTCDataChannels that have entered the \"open\" state during their lifetime.", prometheus.CounterValue, nil),
+		"dataChannelsClosed": newPeerConnectionMetric("data_chennels_closed_total", "Represents the number of unique RTCDataChannels that have left the \"open\" state during their lifetime.", prometheus.CounterValue, nil),
+	}
+
 	// https://www.w3.org/TR/webrtc-stats/#transportstats-dict*
 	transportLabelNames = []string{"id"}
 	transportMetrics    = metrics{
-		"bytesSent":       newTransportMetric("bytes_sent_total", "Represents the total number of payload bytes sent on this RTCIceTransport.", prometheus.CounterValue, nil),
-		"bytesReceived":   newTransportMetric("bytes_received_total", "Represents the total number of payload bytes received on this RTCIceTransport.", prometheus.CounterValue, nil),
-		"packetsSent":     newTransportMetric("packets_sent_total", "Represents the total number of packets sent over this transport.", prometheus.CounterValue, nil),
-		"packetsReceived": newTransportMetric("packets_received_total", "Represents the total number of packets received on this transport.", prometheus.CounterValue, nil),
+		"bytesSent":                    newTransportMetric("bytes_sent_total", "Represents the total number of payload bytes sent on this RTCIceTransport.", prometheus.CounterValue, nil),
+		"bytesReceived":                newTransportMetric("bytes_received_total", "Represents the total number of payload bytes received on this RTCIceTransport.", prometheus.CounterValue, nil),
+		"packetsSent":                  newTransportMetric("packets_sent_total", "Represents the total number of packets sent over this transport.", prometheus.CounterValue, nil),
+		"packetsReceived":              newTransportMetric("packets_received_total", "Represents the total number of packets received on this transport.", prometheus.CounterValue, nil),
+		"selectedCandidatePairChanges": newTransportMetric("selected_candidate_pair_changes_total", "The number of times that the selected candidate pair of this transport has changed.", prometheus.CounterValue, nil),
 	}
 )
 
@@ -267,6 +286,10 @@ func newCodecMetric(metricName string, docString string, t prometheus.ValueType,
 
 func newDataChannelMetric(metricName string, docString string, t prometheus.ValueType, constLabels prometheus.Labels) metricInfo {
 	return newMetric("datachannel", metricName, docString, t, dataChannelLabelNames, constLabels)
+}
+
+func newPeerConnectionMetric(metricName string, docString string, t prometheus.ValueType, constLabels prometheus.Labels) metricInfo {
+	return newMetric("peerconnection", metricName, docString, t, peerConnectionLabelNames, constLabels)
 }
 
 func newTransportMetric(metricName string, docString string, t prometheus.ValueType, constLabels prometheus.Labels) metricInfo {
