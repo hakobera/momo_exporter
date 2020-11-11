@@ -193,51 +193,84 @@ func (e *Exporter) parseStats(stats interface{}, ch chan<- prometheus.Metric) {
 
 func (e *Exporter) exportCodecMetrics(m dproxy.Proxy, ch chan<- prometheus.Metric) {
 	id, _ := m.M("id").String()
-	desc := prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "codec", id),
-		"",
-		[]string{"id", "payload_type", "mime_type", "clock_rate"},
-		nil,
-	)
-
-	payloadTypeValue, _ := m.M("payloadType").Float64()
-	payloadType, _ := m.M("payloadType").Int64()
 	mimeType, _ := m.M("mimeType").String()
 	clockRate, _ := m.M("clockRate").Int64()
-	ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, payloadTypeValue, id, strconv.FormatInt(payloadType, 10), mimeType, strconv.FormatInt(clockRate, 10))
+
+	for key, metric := range codecMetrics {
+		val, _ := m.M(strcase.ToLowerCamel(key)).Float64()
+		ch <- prometheus.MustNewConstMetric(metric.Desc, metric.Type, val, id, mimeType, strconv.FormatInt(clockRate, 10))
+	}
 }
 
 func (e *Exporter) exportDataChannelMetrics(m dproxy.Proxy, ch chan<- prometheus.Metric) {
 	id, _ := m.M("id").String()
 	label, _ := m.M("label").String()
-	names := []string{"message_sent", "message_received", "bytes_sent", "bytes_received"}
 
-	for _, name := range names {
-		desc := prometheus.NewDesc(
-			prometheus.BuildFQName(namespace, "datachannel", name+"_total"),
-			"",
-			[]string{"id", "label"},
-			nil,
-		)
-		val, _ := m.M(strcase.ToLowerCamel(name)).Float64()
-		ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, val, id, label)
+	for key, metric := range dataChannelMetrics {
+		val, _ := m.M(strcase.ToLowerCamel(key)).Float64()
+		ch <- prometheus.MustNewConstMetric(metric.Desc, metric.Type, val, id, label)
 	}
 }
 
 func (e *Exporter) exportTransportMetrics(m dproxy.Proxy, ch chan<- prometheus.Metric) {
 	id, _ := m.M("id").String()
-	names := []string{"bytes_sent", "bytes_received", "packets_sent", "packets_received"}
 
-	for _, name := range names {
-		desc := prometheus.NewDesc(
-			prometheus.BuildFQName(namespace, "transport", name+"_total"),
-			"",
-			[]string{"id"},
-			nil,
-		)
-		val, _ := m.M(strcase.ToLowerCamel(name)).Float64()
-		ch <- prometheus.MustNewConstMetric(desc, prometheus.CounterValue, val, id)
+	for key, metric := range transportMetrics {
+		val, _ := m.M(strcase.ToLowerCamel(key)).Float64()
+		ch <- prometheus.MustNewConstMetric(metric.Desc, metric.Type, val, id)
 	}
+}
+
+type metrics map[string]metricInfo
+
+var (
+	// https://www.w3.org/TR/webrtc-stats/#dom-rtccodecstats
+	codecLabelNames = []string{"id", "mime_type", "clock_rate"}
+	codecMetrics    = metrics{
+		"payloadType": newCodecMetric("payload_type", "Payload type as used in RTP encoding or decoding.", prometheus.GaugeValue, nil),
+	}
+
+	// https://www.w3.org/TR/webrtc-stats/#dom-rtcdatachannelstats
+	dataChannelLabelNames = []string{"id", "label"}
+	dataChannelMetrics    = metrics{
+		"bytesSent":        newDataChannelMetric("bytes_sent_total", "Represents the total number of payload bytes sent on this RTCDataChannel", prometheus.CounterValue, nil),
+		"bytesReceived":    newDataChannelMetric("bytes_received_total", "Represents the total number of payload bytes sent on this RTCDataChannel.", prometheus.CounterValue, nil),
+		"messagesSent":     newDataChannelMetric("messages_sent_total", "Represents the total number of API \"message\" events sent.", prometheus.CounterValue, nil),
+		"messagesReceived": newDataChannelMetric("messages_received_total", "Represents the total number of API \"message\" events received.", prometheus.CounterValue, nil),
+	}
+
+	// https://www.w3.org/TR/webrtc-stats/#transportstats-dict*
+	transportLabelNames = []string{"id"}
+	transportMetrics    = metrics{
+		"bytesSent":       newTransportMetric("bytes_sent_total", "Represents the total number of payload bytes sent on this RTCIceTransport.", prometheus.CounterValue, nil),
+		"bytesReceived":   newTransportMetric("bytes_received_total", "Represents the total number of payload bytes received on this RTCIceTransport.", prometheus.CounterValue, nil),
+		"packetsSent":     newTransportMetric("packets_sent_total", "Represents the total number of packets sent over this transport.", prometheus.CounterValue, nil),
+		"packetsReceived": newTransportMetric("packets_received_total", "Represents the total number of packets received on this transport.", prometheus.CounterValue, nil),
+	}
+)
+
+func newMetric(category string, metricName string, docString string, t prometheus.ValueType, variableLabels []string, constLabels prometheus.Labels) metricInfo {
+	return metricInfo{
+		Desc: prometheus.NewDesc(
+			prometheus.BuildFQName(namespace, category, metricName),
+			docString,
+			variableLabels,
+			constLabels,
+		),
+		Type: t,
+	}
+}
+
+func newCodecMetric(metricName string, docString string, t prometheus.ValueType, constLabels prometheus.Labels) metricInfo {
+	return newMetric("codec", metricName, docString, t, codecLabelNames, constLabels)
+}
+
+func newDataChannelMetric(metricName string, docString string, t prometheus.ValueType, constLabels prometheus.Labels) metricInfo {
+	return newMetric("datachannel", metricName, docString, t, dataChannelLabelNames, constLabels)
+}
+
+func newTransportMetric(metricName string, docString string, t prometheus.ValueType, constLabels prometheus.Labels) metricInfo {
+	return newMetric("transport", metricName, docString, t, transportLabelNames, constLabels)
 }
 
 func main() {
