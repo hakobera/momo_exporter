@@ -178,7 +178,7 @@ func (e *Exporter) parseStats(stats interface{}, ch chan<- prometheus.Metric) {
 		e.jsonParseFailures.Inc()
 		return
 	}
-	level.Info(e.logger).Log("type", t)
+	level.Debug(e.logger).Log("msg", "Metrics type", "type", t)
 
 	// https://www.w3.org/TR/webrtc-stats/#summary
 	switch t {
@@ -186,6 +186,8 @@ func (e *Exporter) parseStats(stats interface{}, ch chan<- prometheus.Metric) {
 		e.exportCodecMetrics(s, ch)
 	case "data-channel":
 		e.exportDataChannelMetrics(s, ch)
+	case "outbound-rtp":
+		e.exportOutboundRTPMetrics(s, ch)
 	case "peer-connection":
 		e.exportPeerConnectionMetrics(s, ch)
 	case "transport":
@@ -211,6 +213,25 @@ func (e *Exporter) exportDataChannelMetrics(m dproxy.Proxy, ch chan<- prometheus
 	for key, metric := range dataChannelMetrics {
 		val, _ := m.M(strcase.ToLowerCamel(key)).Float64()
 		ch <- prometheus.MustNewConstMetric(metric.Desc, metric.Type, val, id, label)
+	}
+}
+
+func (e *Exporter) exportOutboundRTPMetrics(m dproxy.Proxy, ch chan<- prometheus.Metric) {
+	id, _ := m.M("id").String()
+	ssrc, _ := m.M("ssrc").String()
+	kind, _ := m.M("kind").String()
+	rid, _ := m.M("rid").String()
+	trackID, _ := m.M("trackId").String()
+	transportID, _ := m.M("transportId").String()
+	codecID, _ := m.M("codecId").String()
+	encoderImplementation, _ := m.M("encoderImplementation").String()
+	mediaSourceID, _ := m.M("mediaSourceId").String()
+	remoteID, _ := m.M("remoteId").String()
+	qualityLimitationReason, _ := m.M("qualityLimitationReason").String()
+
+	for key, metric := range outboundRTPMetrics {
+		val, _ := m.M(strcase.ToLowerCamel(key)).Float64()
+		ch <- prometheus.MustNewConstMetric(metric.Desc, metric.Type, val, id, ssrc, kind, rid, trackID, transportID, codecID, encoderImplementation, mediaSourceID, remoteID, qualityLimitationReason)
 	}
 }
 
@@ -244,27 +265,52 @@ var (
 	// https://www.w3.org/TR/webrtc-stats/#dom-rtcdatachannelstats
 	dataChannelLabelNames = []string{"id", "label"}
 	dataChannelMetrics    = metrics{
-		"bytesSent":        newDataChannelMetric("bytes_sent_total", "Represents the total number of payload bytes sent on this RTCDataChannel", prometheus.CounterValue, nil),
-		"bytesReceived":    newDataChannelMetric("bytes_received_total", "Represents the total number of payload bytes sent on this RTCDataChannel.", prometheus.CounterValue, nil),
-		"messagesSent":     newDataChannelMetric("messages_sent_total", "Represents the total number of API \"message\" events sent.", prometheus.CounterValue, nil),
-		"messagesReceived": newDataChannelMetric("messages_received_total", "Represents the total number of API \"message\" events received.", prometheus.CounterValue, nil),
+		"bytesSent":        newDataChannelMetric("bytes_sent_total", "Total number of payload bytes sent on this RTCDataChannel", prometheus.CounterValue, nil),
+		"bytesReceived":    newDataChannelMetric("bytes_received_total", "Total number of payload bytes sent on this RTCDataChannel.", prometheus.CounterValue, nil),
+		"messagesSent":     newDataChannelMetric("messages_sent_total", "Total number of API \"message\" events sent.", prometheus.CounterValue, nil),
+		"messagesReceived": newDataChannelMetric("messages_received_total", "Total number of API \"message\" events received.", prometheus.CounterValue, nil),
+	}
+
+	// https://www.w3.org/TR/webrtc-stats/#dom-rtcdatachannelstats
+	outboundRTPLabelNames = []string{"id", "ssrc", "kind", "rid", "trackId", "transportId", "codecId", "encoderImplementation", "mediaSourceId", "remoteId", "qualityLimitationReason"}
+	outboundRTPMetrics    = metrics{
+		"bytesSent":                          newOutboundRTPMetric("bytes_sent_total", "Total number of bytes sent for this SSRC.", prometheus.CounterValue, nil),
+		"headerBytesSent":                    newOutboundRTPMetric("header_bytes_sent_total", "Total number of RTP header and padding bytes sent for this SSRC.", prometheus.CounterValue, nil),
+		"retransmittedBytesSent":             newOutboundRTPMetric("retransmitted_bytes_sent_total", "Total number of bytes that were retransmitted for this SSRC.", prometheus.CounterValue, nil),
+		"packetsSent":                        newOutboundRTPMetric("packets_sent_total", "Total number of RTP packets sent for this SSRC.", prometheus.CounterValue, nil),
+		"retransmittedPacketsSent":           newOutboundRTPMetric("retransmitted_packets_sent_total", "Total number of RTP packets sent for this SSRC.", prometheus.CounterValue, nil),
+		"framesSent":                         newOutboundRTPMetric("frames_sent_total", "Total number of frames sent on this RTP stream.", prometheus.CounterValue, nil),
+		"firCount":                           newOutboundRTPMetric("fir_count_total", "Total number of Full Intra Request (FIR) packets received by this sender.", prometheus.CounterValue, nil),
+		"pliCount":                           newOutboundRTPMetric("pli_count_total", "Total number of Picture Loss Indication (PLI) packets received by this sender.", prometheus.CounterValue, nil),
+		"sliCount":                           newOutboundRTPMetric("sli_count_total", "Total number of Slice Loss Indication (SLI) packets received by this sender.", prometheus.CounterValue, nil),
+		"nackCount":                          newOutboundRTPMetric("nack_count_total", "Total number of Negative ACKnowledgement (NACK) packets received by this sender.", prometheus.CounterValue, nil),
+		"qpSum":                              newOutboundRTPMetric("qp_sum", "Sum of the QP values of frames encoded by this sender.", prometheus.CounterValue, nil),
+		"framesEncoded":                      newOutboundRTPMetric("frames_encoded_total", "Total number of frames successfully encoded for this RTP media stream.", prometheus.CounterValue, nil),
+		"keyFramesEncoded":                   newOutboundRTPMetric("key_frames_encoded_total", "Total number of key frames successfully encoded for this RTP media stream.", prometheus.CounterValue, nil),
+		"totalEncodeTime":                    newOutboundRTPMetric("encode_time_total", "Total number of seconds that has been spent encoding the framesEncoded frames of this stream.", prometheus.CounterValue, nil),
+		"frameWidth":                         newOutboundRTPMetric("frame_width", "Width of the last encoded frame.", prometheus.GaugeValue, nil),
+		"frameHeight":                        newOutboundRTPMetric("frame_height", "Height of the last encoded frame.", prometheus.GaugeValue, nil),
+		"framesPerSecond":                    newOutboundRTPMetric("frames_per_second", "Number of encoded frames during the last second.", prometheus.GaugeValue, nil),
+		"totalPacketSendDelay":               newOutboundRTPMetric("packet_send_delay_total", "Total number of seconds that packets have spent buffered locally before being transmitted onto the network.", prometheus.CounterValue, nil),
+		"totalSamplesSent":                   newOutboundRTPMetric("samples_sent_total", "Total number of samples that have been sent over this RTP stream.", prometheus.CounterValue, nil),
+		"qualityLimitationResolutionChanges": newOutboundRTPMetric("quality_limitation_resolution_changes_total", "Number of times that the resolution has changed because we are quality limited (qualityLimitationReason has a value other than \"none\").", prometheus.CounterValue, nil),
 	}
 
 	// https://www.w3.org/TR/webrtc-stats/#dom-rtcpeerconnectionstats
 	peerConnectionLabelNames = []string{"id"}
 	peerConnectionMetrics    = metrics{
-		"dataChannelsOpened": newPeerConnectionMetric("data_channels_opened_total", "Represents the number of unique RTCDataChannels that have entered the \"open\" state during their lifetime.", prometheus.CounterValue, nil),
-		"dataChannelsClosed": newPeerConnectionMetric("data_chennels_closed_total", "Represents the number of unique RTCDataChannels that have left the \"open\" state during their lifetime.", prometheus.CounterValue, nil),
+		"dataChannelsOpened": newPeerConnectionMetric("data_channels_opened_total", "Number of unique RTCDataChannels that have entered the \"open\" state during their lifetime.", prometheus.CounterValue, nil),
+		"dataChannelsClosed": newPeerConnectionMetric("data_chennels_closed_total", "Number of unique RTCDataChannels that have left the \"open\" state during their lifetime.", prometheus.CounterValue, nil),
 	}
 
 	// https://www.w3.org/TR/webrtc-stats/#transportstats-dict*
 	transportLabelNames = []string{"id"}
 	transportMetrics    = metrics{
-		"bytesSent":                    newTransportMetric("bytes_sent_total", "Represents the total number of payload bytes sent on this RTCIceTransport.", prometheus.CounterValue, nil),
-		"bytesReceived":                newTransportMetric("bytes_received_total", "Represents the total number of payload bytes received on this RTCIceTransport.", prometheus.CounterValue, nil),
-		"packetsSent":                  newTransportMetric("packets_sent_total", "Represents the total number of packets sent over this transport.", prometheus.CounterValue, nil),
-		"packetsReceived":              newTransportMetric("packets_received_total", "Represents the total number of packets received on this transport.", prometheus.CounterValue, nil),
-		"selectedCandidatePairChanges": newTransportMetric("selected_candidate_pair_changes_total", "The number of times that the selected candidate pair of this transport has changed.", prometheus.CounterValue, nil),
+		"bytesSent":                    newTransportMetric("bytes_sent_total", "Total number of payload bytes sent on this RTCIceTransport.", prometheus.CounterValue, nil),
+		"bytesReceived":                newTransportMetric("bytes_received_total", "Total number of payload bytes received on this RTCIceTransport.", prometheus.CounterValue, nil),
+		"packetsSent":                  newTransportMetric("packets_sent_total", "Total number of packets sent over this transport.", prometheus.CounterValue, nil),
+		"packetsReceived":              newTransportMetric("packets_received_total", "Total number of packets received on this transport.", prometheus.CounterValue, nil),
+		"selectedCandidatePairChanges": newTransportMetric("selected_candidate_pair_changes_total", "Number of times that the selected candidate pair of this transport has changed.", prometheus.CounterValue, nil),
 	}
 )
 
@@ -286,6 +332,10 @@ func newCodecMetric(metricName string, docString string, t prometheus.ValueType,
 
 func newDataChannelMetric(metricName string, docString string, t prometheus.ValueType, constLabels prometheus.Labels) metricInfo {
 	return newMetric("datachannel", metricName, docString, t, dataChannelLabelNames, constLabels)
+}
+
+func newOutboundRTPMetric(metricName string, docString string, t prometheus.ValueType, constLabels prometheus.Labels) metricInfo {
+	return newMetric("outbound_rtp", metricName, docString, t, outboundRTPLabelNames, constLabels)
 }
 
 func newPeerConnectionMetric(metricName string, docString string, t prometheus.ValueType, constLabels prometheus.Labels) metricInfo {
