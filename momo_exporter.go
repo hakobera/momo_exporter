@@ -28,6 +28,14 @@ const (
 	namespace = "momo"
 )
 
+// MomoMetrics is metrics respose type of WebRTC Native Client Momo
+type MomoMetrics struct {
+	Version     string `json:"version"`
+	Environment string `json:"environment"`
+	Libwebrtc   string `json:"libwebrtc"`
+	Stats       string `json:"stats"`
+}
+
 type metricInfo struct {
 	Desc *prometheus.Desc
 	Type prometheus.ValueType
@@ -78,7 +86,7 @@ func NewExporter(uri string, sslVerify bool, timeout time.Duration, logger log.L
 		totalScrapes: prometheus.NewCounter(prometheus.CounterOpts{
 			Namespace: namespace,
 			Name:      "exporter_scrapes_total",
-			Help:      "Current total momo scrapse.",
+			Help:      "Current total momo scrapes.",
 		}),
 		jsonParseFailures: prometheus.NewCounter(prometheus.CounterOpts{
 			Namespace: namespace,

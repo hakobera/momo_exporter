@@ -1,0 +1,9 @@
+# HELP momo_exporter_json_parse_failures_total Number of failures while parsing JSON.
+# TYPE momo_exporter_json_parse_failures_total counter
+momo_exporter_json_parse_failures_total 1
+# HELP momo_exporter_scrapes_total Current total momo scrapes.
+# TYPE momo_exporter_scrapes_total counter
+momo_exporter_scrapes_total 1
+# HELP momo_up Was the last scrape of WebRTC Native Client Momo successful.
+# TYPE momo_up gauge
+momo_up 0
