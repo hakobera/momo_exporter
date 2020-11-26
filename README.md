@@ -2,6 +2,8 @@
 
 This is a simple server that scrapes WebRTC Native Client Momo stats and exports them via HTTP for Prometheus consumption.
 
+**CAUTION: Momo Exporter is only works with [customized version of Momo](https://github.com/hakobera/momo/pull/4)**
+
 ## Getting Started
 
 To run it:
