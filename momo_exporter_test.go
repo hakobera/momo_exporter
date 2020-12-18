@@ -57,17 +57,17 @@ func TestInvalidFormat(t *testing.T) {
 	compare(t, "{", "invalid_format")
 }
 
-func TestSuccessEmptyStats(t *testing.T) {
+func TestEmptyStats(t *testing.T) {
 	resp := `{
 		"version": "WebRTC Native Client Momo 2020.11 (db9d97e)",
  		"libwebrtc": "Shiguredo-Build M88.4324@{#2} (88.4324.2.0 54bd8488)",
   		"environment": "[aarch64] Ubuntu 18.04.5 LTS (nvidia-l4t-core 32.4.4-20201016123640)",
 		"stats": []
 	}`
-	compare(t, resp, "success_empty_stats")
+	compare(t, resp, "empty_stats")
 }
 
-func TestSuccessOutboundRTP(t *testing.T) {
+func TestOutboundRTP(t *testing.T) {
 	resp := `{
 		"version": "WebRTC Native Client Momo 2020.11 (db9d97e)",
   		"libwebrtc": "Shiguredo-Build M88.4324@{#2} (88.4324.2.0 54bd8488)",
@@ -111,5 +111,30 @@ func TestSuccessOutboundRTP(t *testing.T) {
     		}
 		]
 	}`
-	compare(t, resp, "success_outbound_rtp")
+	compare(t, resp, "outbound_rtp")
+}
+
+func TestDataChannel(t *testing.T) {
+	resp := `{
+		"version": "WebRTC Native Client Momo 2020.11 (db9d97e)",
+  		"libwebrtc": "Shiguredo-Build M88.4324@{#2} (88.4324.2.0 54bd8488)",
+  		"environment": "[aarch64] Ubuntu 18.04.5 LTS (nvidia-l4t-core 32.4.4-20201016123640)",
+		"stats": [
+			{
+				"bytesReceived": 10,
+				"bytesSent": 20,
+				"dataChannelIdentifier": 1,
+				"id": "RTCDataChannel_1",
+				"label": "serial",
+				"messagesReceived": 1,
+				"messagesSent": 2,
+				"protocol": "",
+				"state": "open",
+				"timestamp": 1608309189926189,
+				"type": "data-channel"
+			}
+		]
+	}`
+
+	compare(t, resp, "data_channel")
 }

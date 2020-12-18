@@ -99,6 +99,9 @@ func NewExporter(uri string, sslVerify bool, timeout time.Duration, logger log.L
 // Describe describes all the metrics ever exported by the Momo exporter.
 // It implements prometheus.Collector.
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
+	for _, m := range dataChannelMetrics {
+		ch <- m.Desc
+	}
 	for _, m := range outboundRTPMetrics {
 		ch <- m.Desc
 	}
