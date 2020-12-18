@@ -1,0 +1,72 @@
+# HELP momo_exporter_json_parse_failures_total Number of failures while parsing JSON.
+# TYPE momo_exporter_json_parse_failures_total counter
+momo_exporter_json_parse_failures_total 0
+# HELP momo_exporter_scrapes_total Current total momo scrapes.
+# TYPE momo_exporter_scrapes_total counter
+momo_exporter_scrapes_total 1
+# HELP momo_outbound_rtp_bytes_sent_total Total number of bytes sent for this SSRC.
+# TYPE momo_outbound_rtp_bytes_sent_total counter
+momo_outbound_rtp_bytes_sent_total{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 5.157622e+06
+# HELP momo_outbound_rtp_encode_time_total Total number of seconds that has been spent encoding the framesEncoded frames of this stream.
+# TYPE momo_outbound_rtp_encode_time_total counter
+momo_outbound_rtp_encode_time_total{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 10.865
+# HELP momo_outbound_rtp_fir_count_total Total number of Full Intra Request (FIR) packets received by this sender.
+# TYPE momo_outbound_rtp_fir_count_total counter
+momo_outbound_rtp_fir_count_total{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 0
+# HELP momo_outbound_rtp_frame_height Height of the last encoded frame.
+# TYPE momo_outbound_rtp_frame_height gauge
+momo_outbound_rtp_frame_height{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 720
+# HELP momo_outbound_rtp_frame_width Width of the last encoded frame.
+# TYPE momo_outbound_rtp_frame_width gauge
+momo_outbound_rtp_frame_width{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 1280
+# HELP momo_outbound_rtp_frames_encoded_total Total number of frames successfully encoded for this RTP media stream.
+# TYPE momo_outbound_rtp_frames_encoded_total counter
+momo_outbound_rtp_frames_encoded_total{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 603
+# HELP momo_outbound_rtp_frames_per_second Number of encoded frames during the last second.
+# TYPE momo_outbound_rtp_frames_per_second gauge
+momo_outbound_rtp_frames_per_second{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 30
+# HELP momo_outbound_rtp_frames_sent_total Total number of frames sent on this RTP stream.
+# TYPE momo_outbound_rtp_frames_sent_total counter
+momo_outbound_rtp_frames_sent_total{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 603
+# HELP momo_outbound_rtp_header_bytes_sent_total Total number of RTP header and padding bytes sent for this SSRC.
+# TYPE momo_outbound_rtp_header_bytes_sent_total counter
+momo_outbound_rtp_header_bytes_sent_total{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 120652
+# HELP momo_outbound_rtp_key_frames_encoded_total Total number of key frames successfully encoded for this RTP media stream.
+# TYPE momo_outbound_rtp_key_frames_encoded_total counter
+momo_outbound_rtp_key_frames_encoded_total{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 6
+# HELP momo_outbound_rtp_nack_count_total Total number of Negative ACKnowledgement (NACK) packets received by this sender.
+# TYPE momo_outbound_rtp_nack_count_total counter
+momo_outbound_rtp_nack_count_total{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 0
+# HELP momo_outbound_rtp_packet_send_delay_total Total number of seconds that packets have spent buffered locally before being transmitted onto the network.
+# TYPE momo_outbound_rtp_packet_send_delay_total counter
+momo_outbound_rtp_packet_send_delay_total{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 127.646
+# HELP momo_outbound_rtp_packets_sent_total Total number of RTP packets sent for this SSRC.
+# TYPE momo_outbound_rtp_packets_sent_total counter
+momo_outbound_rtp_packets_sent_total{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 4788
+# HELP momo_outbound_rtp_pli_count_total Total number of Picture Loss Indication (PLI) packets received by this sender.
+# TYPE momo_outbound_rtp_pli_count_total counter
+momo_outbound_rtp_pli_count_total{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 0
+# HELP momo_outbound_rtp_qp_sum Sum of the QP values of frames encoded by this sender.
+# TYPE momo_outbound_rtp_qp_sum counter
+momo_outbound_rtp_qp_sum{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 11409
+# HELP momo_outbound_rtp_quality_limitation_resolution_changes_total Number of times that the resolution has changed because we are quality limited (qualityLimitationReason has a value other than "none").
+# TYPE momo_outbound_rtp_quality_limitation_resolution_changes_total counter
+momo_outbound_rtp_quality_limitation_resolution_changes_total{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 0
+# HELP momo_outbound_rtp_retransmitted_bytes_sent_total Total number of bytes that were retransmitted for this SSRC.
+# TYPE momo_outbound_rtp_retransmitted_bytes_sent_total counter
+momo_outbound_rtp_retransmitted_bytes_sent_total{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 0
+# HELP momo_outbound_rtp_retransmitted_packets_sent_total Total number of RTP packets sent for this SSRC.
+# TYPE momo_outbound_rtp_retransmitted_packets_sent_total counter
+momo_outbound_rtp_retransmitted_packets_sent_total{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 0
+# HELP momo_outbound_rtp_samples_sent_total Total number of samples that have been sent over this RTP stream.
+# TYPE momo_outbound_rtp_samples_sent_total counter
+momo_outbound_rtp_samples_sent_total{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 0
+# HELP momo_outbound_rtp_sli_count_total Total number of Slice Loss Indication (SLI) packets received by this sender.
+# TYPE momo_outbound_rtp_sli_count_total counter
+momo_outbound_rtp_sli_count_total{codecId="RTCCodec_0_Outbound_102",encoderImplementation="Jetson Video Encoder",id="RTCOutboundRTPVideoStream_2372247626",kind="video",mediaSourceId="RTCVideoSource_1"} 0
+# HELP momo_up Was the last scrape of WebRTC Native Client Momo successful.
+# TYPE momo_up gauge
+momo_up 1
+# HELP momo_version_info WebRTC Native Client Momo version info.
+# TYPE momo_version_info gauge
+momo_version_info{environment="[aarch64] Ubuntu 18.04.5 LTS (nvidia-l4t-core 32.4.4-20201016123640)",libwebrtc="Shiguredo-Build M88.4324@{#2} (88.4324.2.0 54bd8488)",version="WebRTC Native Client Momo 2020.11 (db9d97e)"} 1

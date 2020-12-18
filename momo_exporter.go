@@ -99,6 +99,9 @@ func NewExporter(uri string, sslVerify bool, timeout time.Duration, logger log.L
 // Describe describes all the metrics ever exported by the Momo exporter.
 // It implements prometheus.Collector.
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
+	for _, m := range outboundRTPMetrics {
+		ch <- m.Desc
+	}
 	ch <- momoInfo
 	ch <- momoUp
 	ch <- e.totalScrapes.Desc()
@@ -207,20 +210,14 @@ func (e *Exporter) exportDataChannelMetrics(m dproxy.Proxy, ch chan<- prometheus
 
 func (e *Exporter) exportOutboundRTPMetrics(m dproxy.Proxy, ch chan<- prometheus.Metric) {
 	id, _ := m.M("id").String()
-	ssrc, _ := m.M("ssrc").String()
-	kind, _ := m.M("kind").String()
-	rid, _ := m.M("rid").String()
-	trackID, _ := m.M("trackId").String()
-	transportID, _ := m.M("transportId").String()
 	codecID, _ := m.M("codecId").String()
 	encoderImplementation, _ := m.M("encoderImplementation").String()
+	kind, _ := m.M("kind").String()
 	mediaSourceID, _ := m.M("mediaSourceId").String()
-	remoteID, _ := m.M("remoteId").String()
-	qualityLimitationReason, _ := m.M("qualityLimitationReason").String()
 
 	for key, metric := range outboundRTPMetrics {
 		val, _ := m.M(strcase.ToLowerCamel(key)).Float64()
-		ch <- prometheus.MustNewConstMetric(metric.Desc, metric.Type, val, id, ssrc, kind, rid, trackID, transportID, codecID, encoderImplementation, mediaSourceID, remoteID, qualityLimitationReason)
+		ch <- prometheus.MustNewConstMetric(metric.Desc, metric.Type, val, id, codecID, encoderImplementation, kind, mediaSourceID)
 	}
 }
 
@@ -245,12 +242,6 @@ func (e *Exporter) exportTransportMetrics(m dproxy.Proxy, ch chan<- prometheus.M
 type metrics map[string]metricInfo
 
 var (
-	// https://www.w3.org/TR/webrtc-stats/#dom-rtccodecstats
-	codecLabelNames = []string{"id", "mime_type", "clock_rate"}
-	codecMetrics    = metrics{
-		"payloadType": newCodecMetric("payload_type", "Payload type as used in RTP encoding or decoding.", prometheus.GaugeValue, nil),
-	}
-
 	// https://www.w3.org/TR/webrtc-stats/#dom-rtcdatachannelstats
 	dataChannelLabelNames = []string{"id", "label"}
 	dataChannelMetrics    = metrics{
@@ -260,8 +251,8 @@ var (
 		"messagesReceived": newDataChannelMetric("messages_received_total", "Total number of API \"message\" events received.", prometheus.CounterValue, nil),
 	}
 
-	// https://www.w3.org/TR/webrtc-stats/#dom-rtcdatachannelstats
-	outboundRTPLabelNames = []string{"id", "ssrc", "kind", "rid", "trackId", "transportId", "codecId", "encoderImplementation", "mediaSourceId", "remoteId", "qualityLimitationReason"}
+	// https://www.w3.org/TR/webrtc-stats/#dom-rtcoutboundrtpstreamstats
+	outboundRTPLabelNames = []string{"id", "codecId", "encoderImplementation", "kind", "mediaSourceId"}
 	outboundRTPMetrics    = metrics{
 		"bytesSent":                          newOutboundRTPMetric("bytes_sent_total", "Total number of bytes sent for this SSRC.", prometheus.CounterValue, nil),
 		"headerBytesSent":                    newOutboundRTPMetric("header_bytes_sent_total", "Total number of RTP header and padding bytes sent for this SSRC.", prometheus.CounterValue, nil),
@@ -313,10 +304,6 @@ func newMetric(category string, metricName string, docString string, t prometheu
 		),
 		Type: t,
 	}
-}
-
-func newCodecMetric(metricName string, docString string, t prometheus.ValueType, constLabels prometheus.Labels) metricInfo {
-	return newMetric("codec", metricName, docString, t, codecLabelNames, constLabels)
 }
 
 func newDataChannelMetric(metricName string, docString string, t prometheus.ValueType, constLabels prometheus.Labels) metricInfo {

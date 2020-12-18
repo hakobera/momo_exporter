@@ -66,3 +66,50 @@ func TestSuccessEmptyStats(t *testing.T) {
 	}`
 	compare(t, resp, "success_empty_stats")
 }
+
+func TestSuccessOutboundRTP(t *testing.T) {
+	resp := `{
+		"version": "WebRTC Native Client Momo 2020.11 (db9d97e)",
+  		"libwebrtc": "Shiguredo-Build M88.4324@{#2} (88.4324.2.0 54bd8488)",
+  		"environment": "[aarch64] Ubuntu 18.04.5 LTS (nvidia-l4t-core 32.4.4-20201016123640)",
+		"stats": [
+			{
+				"bytesSent": 5157622,
+				"codecId": "RTCCodec_0_Outbound_102",
+				"encoderImplementation": "Jetson Video Encoder",
+				"firCount": 0,
+				"frameHeight": 720,
+				"frameWidth": 1280,
+				"framesEncoded": 603,
+				"framesPerSecond": 30,
+				"framesSent": 603,
+				"headerBytesSent": 120652,
+				"hugeFramesSent": 1,
+				"id": "RTCOutboundRTPVideoStream_2372247626",
+				"isRemote": false,
+				"keyFramesEncoded": 6,
+				"kind": "video",
+				"mediaSourceId": "RTCVideoSource_1",
+				"mediaType": "video",
+				"nackCount": 0,
+				"packetsSent": 4788,
+				"pliCount": 0,
+				"qpSum": 11409,
+				"qualityLimitationReason": "none",
+				"qualityLimitationResolutionChanges": 0,
+				"remoteId": "RTCRemoteInboundRtpVideoStream_2372247626",
+				"retransmittedBytesSent": 0,
+				"retransmittedPacketsSent": 0,
+				"ssrc": 2372247626,
+				"timestamp": 1608309189926189,
+				"totalEncodeTime": 10.865,
+				"totalEncodedBytesTarget": 0,
+				"totalPacketSendDelay": 127.646,
+				"trackId": "RTCMediaStreamTrack_sender_1",
+				"transportId": "RTCTransport_0_1",
+				"type": "outbound-rtp"
+    		}
+		]
+	}`
+	compare(t, resp, "success_outbound_rtp")
+}
