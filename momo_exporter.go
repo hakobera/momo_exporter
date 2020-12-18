@@ -105,6 +105,9 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	for _, m := range outboundRTPMetrics {
 		ch <- m.Desc
 	}
+	for _, m := range peerConnectionMetrics {
+		ch <- m.Desc
+	}
 	ch <- momoInfo
 	ch <- momoUp
 	ch <- e.totalScrapes.Desc()
@@ -283,7 +286,7 @@ var (
 	peerConnectionLabelNames = []string{"id"}
 	peerConnectionMetrics    = metrics{
 		"dataChannelsOpened": newPeerConnectionMetric("data_channels_opened_total", "Number of unique RTCDataChannels that have entered the \"open\" state during their lifetime.", prometheus.CounterValue, nil),
-		"dataChannelsClosed": newPeerConnectionMetric("data_chennels_closed_total", "Number of unique RTCDataChannels that have left the \"open\" state during their lifetime.", prometheus.CounterValue, nil),
+		"dataChannelsClosed": newPeerConnectionMetric("data_chennels_closed_total", "Number of unique RTCDataChannels that have left the \"open\" state during their lifetime (due to being closed by either end or the underlying transport being closed).", prometheus.CounterValue, nil),
 	}
 
 	// https://www.w3.org/TR/webrtc-stats/#transportstats-dict*

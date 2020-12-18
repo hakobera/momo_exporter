@@ -135,6 +135,23 @@ func TestDataChannel(t *testing.T) {
 			}
 		]
 	}`
-
 	compare(t, resp, "data_channel")
+}
+
+func TestPeerConnection(t *testing.T) {
+	resp := `{
+		"version": "WebRTC Native Client Momo 2020.11 (db9d97e)",
+		"libwebrtc": "Shiguredo-Build M88.4324@{#2} (88.4324.2.0 54bd8488)",
+		"environment": "[aarch64] Ubuntu 18.04.5 LTS (nvidia-l4t-core 32.4.4-20201016123640)",
+		"stats": [
+			{
+				"dataChannelsClosed": 0,
+				"dataChannelsOpened": 1,
+				"id": "RTCPeerConnection",
+				"timestamp": 1608309189926189,
+				"type": "peer-connection"
+			}
+		]
+	}`
+	compare(t, resp, "peer_connection")
 }
