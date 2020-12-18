@@ -36,6 +36,12 @@ func handler(h *momo) http.HandlerFunc {
 	}
 }
 
+func handlerStale(exit chan bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		<-exit
+	}
+}
+
 func expectMetrics(t *testing.T, c prometheus.Collector, fixture string) {
 	exp, err := os.Open(path.Join("test", fixture) + ".metrics")
 	if err != nil {
@@ -49,7 +55,10 @@ func expectMetrics(t *testing.T, c prometheus.Collector, fixture string) {
 func compare(t *testing.T, response string, fixture string) {
 	h := newMomo([]byte(response))
 	defer h.Close()
-	e, _ := NewExporter(h.URL, true, 5*time.Second, log.NewNopLogger())
+	e, err := NewExporter(h.URL, true, 5*time.Second, log.NewNopLogger())
+	if err != nil {
+		t.Fatal(err)
+	}
 	expectMetrics(t, e, fixture)
 }
 
@@ -182,4 +191,34 @@ func TestTransport(t *testing.T) {
 		]
 	}`
 	compare(t, resp, "transport")
+}
+
+func TestDeadline(t *testing.T) {
+	exit := make(chan bool)
+	h := httptest.NewServer(handlerStale(exit))
+	defer func() {
+		// s.Close() will block until the handler
+		// returns, so we need to make it exit.
+		exit <- true
+		h.Close()
+	}()
+
+	e, err := NewExporter(h.URL, true, 1*time.Second, log.NewNopLogger())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectMetrics(t, e, "deadline")
+}
+
+func TestNotFound(t *testing.T) {
+	h := httptest.NewServer(http.NotFoundHandler())
+	defer h.Close()
+
+	e, err := NewExporter(h.URL, true, 5*time.Second, log.NewNopLogger())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectMetrics(t, e, "not_found")
 }
