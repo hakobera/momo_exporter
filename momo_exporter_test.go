@@ -155,3 +155,31 @@ func TestPeerConnection(t *testing.T) {
 	}`
 	compare(t, resp, "peer_connection")
 }
+
+func TestTransport(t *testing.T) {
+	resp := `{
+		"version": "WebRTC Native Client Momo 2020.11 (db9d97e)",
+		"libwebrtc": "Shiguredo-Build M88.4324@{#2} (88.4324.2.0 54bd8488)",
+		"environment": "[aarch64] Ubuntu 18.04.5 LTS (nvidia-l4t-core 32.4.4-20201016123640)",
+		"stats": [
+			{
+				"bytesReceived": 21186,
+				"bytesSent": 5335226,
+				"dtlsCipher": "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+				"dtlsState": "connected",
+				"id": "RTCTransport_0_1",
+				"localCertificateId": "RTCCertificate_D0:FF:4F:85:E1:67:31:83:33:F1:47:6E:08:65:FC:25:78:09:51:DF:04:51:7F:7B:E4:EE:CF:DA:D7:5C:94:41",
+				"packetsReceived": 382,
+				"packetsSent": 4904,
+				"remoteCertificateId": "RTCCertificate_C0:92:CF:1A:63:65:5B:93:91:5A:81:F9:57:C0:0E:66:59:EC:47:BD:04:C8:8E:21:65:D3:F9:C9:F8:06:59:99",
+				"selectedCandidatePairChanges": 2,
+				"selectedCandidatePairId": "RTCIceCandidatePair_vpgjsoAn_zQSEz4UN",
+				"srtpCipher": "AES_CM_128_HMAC_SHA1_80",
+				"timestamp": 1608309189926189,
+				"tlsVersion": "FEFD",
+				"type": "transport"
+			}
+		]
+	}`
+	compare(t, resp, "transport")
+}

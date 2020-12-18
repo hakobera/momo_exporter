@@ -108,6 +108,9 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	for _, m := range peerConnectionMetrics {
 		ch <- m.Desc
 	}
+	for _, m := range transportMetrics {
+		ch <- m.Desc
+	}
 	ch <- momoInfo
 	ch <- momoUp
 	ch <- e.totalScrapes.Desc()

@@ -1,0 +1,27 @@
+# HELP momo_exporter_json_parse_failures_total Number of failures while parsing JSON.
+# TYPE momo_exporter_json_parse_failures_total counter
+momo_exporter_json_parse_failures_total 0
+# HELP momo_exporter_scrapes_total Current total momo scrapes.
+# TYPE momo_exporter_scrapes_total counter
+momo_exporter_scrapes_total 1
+# HELP momo_transport_bytes_received_total Total number of payload bytes received on this RTCIceTransport.
+# TYPE momo_transport_bytes_received_total counter
+momo_transport_bytes_received_total{id="RTCTransport_0_1"} 21186
+# HELP momo_transport_bytes_sent_total Total number of payload bytes sent on this RTCIceTransport.
+# TYPE momo_transport_bytes_sent_total counter
+momo_transport_bytes_sent_total{id="RTCTransport_0_1"} 5.335226e+06
+# HELP momo_transport_packets_received_total Total number of packets received on this transport.
+# TYPE momo_transport_packets_received_total counter
+momo_transport_packets_received_total{id="RTCTransport_0_1"} 382
+# HELP momo_transport_packets_sent_total Total number of packets sent over this transport.
+# TYPE momo_transport_packets_sent_total counter
+momo_transport_packets_sent_total{id="RTCTransport_0_1"} 4904
+# HELP momo_transport_selected_candidate_pair_changes_total Number of times that the selected candidate pair of this transport has changed.
+# TYPE momo_transport_selected_candidate_pair_changes_total counter
+momo_transport_selected_candidate_pair_changes_total{id="RTCTransport_0_1"} 2
+# HELP momo_up Was the last scrape of WebRTC Native Client Momo successful.
+# TYPE momo_up gauge
+momo_up 1
+# HELP momo_version_info WebRTC Native Client Momo version info.
+# TYPE momo_version_info gauge
+momo_version_info{environment="[aarch64] Ubuntu 18.04.5 LTS (nvidia-l4t-core 32.4.4-20201016123640)",libwebrtc="Shiguredo-Build M88.4324@{#2} (88.4324.2.0 54bd8488)",version="WebRTC Native Client Momo 2020.11 (db9d97e)"} 1
