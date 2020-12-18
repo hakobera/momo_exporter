@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 	"sync"
 	"time"
 
@@ -185,8 +184,6 @@ func (e *Exporter) parseStats(stats interface{}, ch chan<- prometheus.Metric) {
 
 	// https://www.w3.org/TR/webrtc-stats/#summary
 	switch t {
-	case "codec":
-		e.exportCodecMetrics(s, ch)
 	case "data-channel":
 		e.exportDataChannelMetrics(s, ch)
 	case "outbound-rtp":
@@ -195,17 +192,6 @@ func (e *Exporter) parseStats(stats interface{}, ch chan<- prometheus.Metric) {
 		e.exportPeerConnectionMetrics(s, ch)
 	case "transport":
 		e.exportTransportMetrics(s, ch)
-	}
-}
-
-func (e *Exporter) exportCodecMetrics(m dproxy.Proxy, ch chan<- prometheus.Metric) {
-	id, _ := m.M("id").String()
-	mimeType, _ := m.M("mimeType").String()
-	clockRate, _ := m.M("clockRate").Int64()
-
-	for key, metric := range codecMetrics {
-		val, _ := m.M(strcase.ToLowerCamel(key)).Float64()
-		ch <- prometheus.MustNewConstMetric(metric.Desc, metric.Type, val, id, mimeType, strconv.FormatInt(clockRate, 10))
 	}
 }
 
