@@ -1,0 +1,18 @@
+# HELP momo_exporter_json_parse_failures_total Number of failures while parsing JSON.
+# TYPE momo_exporter_json_parse_failures_total counter
+momo_exporter_json_parse_failures_total 0
+# HELP momo_exporter_scrapes_total Current total momo scrapes.
+# TYPE momo_exporter_scrapes_total counter
+momo_exporter_scrapes_total 1
+# HELP momo_peerconnection_data_channels_opened_total Number of unique RTCDataChannels that have entered the "open" state during their lifetime.
+# TYPE momo_peerconnection_data_channels_opened_total counter
+momo_peerconnection_data_channels_opened_total{id="RTCPeerConnection"} 1
+# HELP momo_peerconnection_data_chennels_closed_total Number of unique RTCDataChannels that have left the "open" state during their lifetime (due to being closed by either end or the underlying transport being closed).
+# TYPE momo_peerconnection_data_chennels_closed_total counter
+momo_peerconnection_data_chennels_closed_total{id="RTCPeerConnection"} 0
+# HELP momo_up Was the last scrape of WebRTC Native Client Momo successful.
+# TYPE momo_up gauge
+momo_up 1
+# HELP momo_version_info WebRTC Native Client Momo version info.
+# TYPE momo_version_info gauge
+momo_version_info{environment="[aarch64] Ubuntu 18.04.5 LTS (nvidia-l4t-core 32.4.4-20201016123640)",libwebrtc="Shiguredo-Build M88.4324@{#2} (88.4324.2.0 54bd8488)",version="WebRTC Native Client Momo 2020.11 (db9d97e)"} 1

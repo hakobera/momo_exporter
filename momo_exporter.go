@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 	"sync"
 	"time"
 
@@ -30,10 +29,10 @@ const (
 
 // MomoMetrics is metrics respose type of WebRTC Native Client Momo
 type MomoMetrics struct {
-	Version     string `json:"version"`
-	Environment string `json:"environment"`
-	Libwebrtc   string `json:"libwebrtc"`
-	Stats       string `json:"stats"`
+	Version     string      `json:"version"`
+	Environment string      `json:"environment"`
+	Libwebrtc   string      `json:"libwebrtc"`
+	Stats       interface{} `json:"stats"`
 }
 
 type metricInfo struct {
@@ -100,6 +99,18 @@ func NewExporter(uri string, sslVerify bool, timeout time.Duration, logger log.L
 // Describe describes all the metrics ever exported by the Momo exporter.
 // It implements prometheus.Collector.
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
+	for _, m := range dataChannelMetrics {
+		ch <- m.Desc
+	}
+	for _, m := range outboundRTPMetrics {
+		ch <- m.Desc
+	}
+	for _, m := range peerConnectionMetrics {
+		ch <- m.Desc
+	}
+	for _, m := range transportMetrics {
+		ch <- m.Desc
+	}
 	ch <- momoInfo
 	ch <- momoUp
 	ch <- e.totalScrapes.Desc()
@@ -159,12 +170,7 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) (up float64) {
 
 	ch <- prometheus.MustNewConstMetric(momoInfo, prometheus.GaugeValue, 1, metrics.Version, metrics.Environment, metrics.Libwebrtc)
 
-	level.Debug(e.logger).Log("msg", metrics.Stats)
-
-	var v interface{}
-	json.Unmarshal([]byte(metrics.Stats), &v)
-
-	stats, err := dproxy.New(v).Array()
+	stats, err := dproxy.New(metrics.Stats).Array()
 	if err != nil {
 		level.Error(e.logger).Log("msg", "Failed to parse WebRTC stats", "err", err)
 		e.jsonParseFailures.Inc()
@@ -190,8 +196,6 @@ func (e *Exporter) parseStats(stats interface{}, ch chan<- prometheus.Metric) {
 
 	// https://www.w3.org/TR/webrtc-stats/#summary
 	switch t {
-	case "codec":
-		e.exportCodecMetrics(s, ch)
 	case "data-channel":
 		e.exportDataChannelMetrics(s, ch)
 	case "outbound-rtp":
@@ -200,17 +204,6 @@ func (e *Exporter) parseStats(stats interface{}, ch chan<- prometheus.Metric) {
 		e.exportPeerConnectionMetrics(s, ch)
 	case "transport":
 		e.exportTransportMetrics(s, ch)
-	}
-}
-
-func (e *Exporter) exportCodecMetrics(m dproxy.Proxy, ch chan<- prometheus.Metric) {
-	id, _ := m.M("id").String()
-	mimeType, _ := m.M("mimeType").String()
-	clockRate, _ := m.M("clockRate").Int64()
-
-	for key, metric := range codecMetrics {
-		val, _ := m.M(strcase.ToLowerCamel(key)).Float64()
-		ch <- prometheus.MustNewConstMetric(metric.Desc, metric.Type, val, id, mimeType, strconv.FormatInt(clockRate, 10))
 	}
 }
 
@@ -226,20 +219,14 @@ func (e *Exporter) exportDataChannelMetrics(m dproxy.Proxy, ch chan<- prometheus
 
 func (e *Exporter) exportOutboundRTPMetrics(m dproxy.Proxy, ch chan<- prometheus.Metric) {
 	id, _ := m.M("id").String()
-	ssrc, _ := m.M("ssrc").String()
-	kind, _ := m.M("kind").String()
-	rid, _ := m.M("rid").String()
-	trackID, _ := m.M("trackId").String()
-	transportID, _ := m.M("transportId").String()
 	codecID, _ := m.M("codecId").String()
 	encoderImplementation, _ := m.M("encoderImplementation").String()
+	kind, _ := m.M("kind").String()
 	mediaSourceID, _ := m.M("mediaSourceId").String()
-	remoteID, _ := m.M("remoteId").String()
-	qualityLimitationReason, _ := m.M("qualityLimitationReason").String()
 
 	for key, metric := range outboundRTPMetrics {
 		val, _ := m.M(strcase.ToLowerCamel(key)).Float64()
-		ch <- prometheus.MustNewConstMetric(metric.Desc, metric.Type, val, id, ssrc, kind, rid, trackID, transportID, codecID, encoderImplementation, mediaSourceID, remoteID, qualityLimitationReason)
+		ch <- prometheus.MustNewConstMetric(metric.Desc, metric.Type, val, id, codecID, encoderImplementation, kind, mediaSourceID)
 	}
 }
 
@@ -264,12 +251,6 @@ func (e *Exporter) exportTransportMetrics(m dproxy.Proxy, ch chan<- prometheus.M
 type metrics map[string]metricInfo
 
 var (
-	// https://www.w3.org/TR/webrtc-stats/#dom-rtccodecstats
-	codecLabelNames = []string{"id", "mime_type", "clock_rate"}
-	codecMetrics    = metrics{
-		"payloadType": newCodecMetric("payload_type", "Payload type as used in RTP encoding or decoding.", prometheus.GaugeValue, nil),
-	}
-
 	// https://www.w3.org/TR/webrtc-stats/#dom-rtcdatachannelstats
 	dataChannelLabelNames = []string{"id", "label"}
 	dataChannelMetrics    = metrics{
@@ -279,8 +260,8 @@ var (
 		"messagesReceived": newDataChannelMetric("messages_received_total", "Total number of API \"message\" events received.", prometheus.CounterValue, nil),
 	}
 
-	// https://www.w3.org/TR/webrtc-stats/#dom-rtcdatachannelstats
-	outboundRTPLabelNames = []string{"id", "ssrc", "kind", "rid", "trackId", "transportId", "codecId", "encoderImplementation", "mediaSourceId", "remoteId", "qualityLimitationReason"}
+	// https://www.w3.org/TR/webrtc-stats/#dom-rtcoutboundrtpstreamstats
+	outboundRTPLabelNames = []string{"id", "codecId", "encoderImplementation", "kind", "mediaSourceId"}
 	outboundRTPMetrics    = metrics{
 		"bytesSent":                          newOutboundRTPMetric("bytes_sent_total", "Total number of bytes sent for this SSRC.", prometheus.CounterValue, nil),
 		"headerBytesSent":                    newOutboundRTPMetric("header_bytes_sent_total", "Total number of RTP header and padding bytes sent for this SSRC.", prometheus.CounterValue, nil),
@@ -308,7 +289,7 @@ var (
 	peerConnectionLabelNames = []string{"id"}
 	peerConnectionMetrics    = metrics{
 		"dataChannelsOpened": newPeerConnectionMetric("data_channels_opened_total", "Number of unique RTCDataChannels that have entered the \"open\" state during their lifetime.", prometheus.CounterValue, nil),
-		"dataChannelsClosed": newPeerConnectionMetric("data_chennels_closed_total", "Number of unique RTCDataChannels that have left the \"open\" state during their lifetime.", prometheus.CounterValue, nil),
+		"dataChannelsClosed": newPeerConnectionMetric("data_chennels_closed_total", "Number of unique RTCDataChannels that have left the \"open\" state during their lifetime (due to being closed by either end or the underlying transport being closed).", prometheus.CounterValue, nil),
 	}
 
 	// https://www.w3.org/TR/webrtc-stats/#transportstats-dict*
@@ -332,10 +313,6 @@ func newMetric(category string, metricName string, docString string, t prometheu
 		),
 		Type: t,
 	}
-}
-
-func newCodecMetric(metricName string, docString string, t prometheus.ValueType, constLabels prometheus.Labels) metricInfo {
-	return newMetric("codec", metricName, docString, t, codecLabelNames, constLabels)
 }
 
 func newDataChannelMetric(metricName string, docString string, t prometheus.ValueType, constLabels prometheus.Labels) metricInfo {
