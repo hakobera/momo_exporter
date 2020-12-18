@@ -30,10 +30,10 @@ const (
 
 // MomoMetrics is metrics respose type of WebRTC Native Client Momo
 type MomoMetrics struct {
-	Version     string `json:"version"`
-	Environment string `json:"environment"`
-	Libwebrtc   string `json:"libwebrtc"`
-	Stats       string `json:"stats"`
+	Version     string      `json:"version"`
+	Environment string      `json:"environment"`
+	Libwebrtc   string      `json:"libwebrtc"`
+	Stats       interface{} `json:"stats"`
 }
 
 type metricInfo struct {
@@ -159,12 +159,7 @@ func (e *Exporter) scrape(ch chan<- prometheus.Metric) (up float64) {
 
 	ch <- prometheus.MustNewConstMetric(momoInfo, prometheus.GaugeValue, 1, metrics.Version, metrics.Environment, metrics.Libwebrtc)
 
-	level.Debug(e.logger).Log("msg", metrics.Stats)
-
-	var v interface{}
-	json.Unmarshal([]byte(metrics.Stats), &v)
-
-	stats, err := dproxy.New(v).Array()
+	stats, err := dproxy.New(metrics.Stats).Array()
 	if err != nil {
 		level.Error(e.logger).Log("msg", "Failed to parse WebRTC stats", "err", err)
 		e.jsonParseFailures.Inc()

@@ -37,7 +37,7 @@ func handler(h *momo) http.HandlerFunc {
 }
 
 func expectMetrics(t *testing.T, c prometheus.Collector, fixture string) {
-	exp, err := os.Open(path.Join("test", fixture))
+	exp, err := os.Open(path.Join("test", fixture) + ".metrics")
 	if err != nil {
 		t.Fatalf("Error opening fixture file %q: %v", fixture, err)
 	}
@@ -46,11 +46,23 @@ func expectMetrics(t *testing.T, c prometheus.Collector, fixture string) {
 	}
 }
 
-func TestInvalidFormat(t *testing.T) {
-	h := newMomo([]byte("{"))
+func compare(t *testing.T, response string, fixture string) {
+	h := newMomo([]byte(response))
 	defer h.Close()
-
 	e, _ := NewExporter(h.URL, true, 5*time.Second, log.NewNopLogger())
+	expectMetrics(t, e, fixture)
+}
 
-	expectMetrics(t, e, "invalid_format.metrics")
+func TestInvalidFormat(t *testing.T) {
+	compare(t, "{", "invalid_format")
+}
+
+func TestSuccessEmptyStats(t *testing.T) {
+	resp := `{
+		"version": "WebRTC Native Client Momo 2020.11 (db9d97e)",
+ 		"libwebrtc": "Shiguredo-Build M88.4324@{#2} (88.4324.2.0 54bd8488)",
+  		"environment": "[aarch64] Ubuntu 18.04.5 LTS (nvidia-l4t-core 32.4.4-20201016123640)",
+		"stats": []
+	}`
+	compare(t, resp, "success_empty_stats")
 }
