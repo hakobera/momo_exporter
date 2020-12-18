@@ -1,6 +1,6 @@
 # WebRTC Native Client Momo Exporter for Prometheus
 
-This is a simple server that scrapes WebRTC Native Client Momo stats and exports them via HTTP for Prometheus consumption.
+This is a simple server that scrapes [WebRTC Native Client Momo](https://github.com/shiguredo/momo) Metrics API and exports them via HTTP for Prometheus consumption.
 
 ## Prerequisities
 
