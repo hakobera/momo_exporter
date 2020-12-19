@@ -1,0 +1,46 @@
+project_name: momo_exporter
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - binary: momo_exporter
+    flags:
+      - -a -tags netgo -installsuffix netgo
+    ldflags:
+      - -s -w
+      - -extldflags "-static"
+      - -X github.com/prometheus/common/version.Version={{.Version}}
+      - -X github.com/prometheus/common/version.Revision={{.ShortCommit}}
+      - -X github.com/prometheus/common/version.Branch={{.Tag}}
+      - -X github.com/prometheus/common/version.BuildUser=goreleaser
+      - -X github.com/prometheus/common/version.BuildDate={{.Date}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - 6
+      - 7
+    ignore:
+      - goos: darwin
+        goarch: arm64
+      - goos: windows
+        goarch: arm
+archives:
+  - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    replacements:
+      darwin: darwin
+      linux: linux
+      windows: windows
+      amd64: x86_64
+    format_overrides:
+      - goos: windows
+        format: zip
+release:
+  prerelease: auto
