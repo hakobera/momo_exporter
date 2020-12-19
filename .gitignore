@@ -14,3 +14,7 @@ momo_exporter
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# goreleaser
+goreleaser
+dist/
