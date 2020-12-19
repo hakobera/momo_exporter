@@ -46,7 +46,7 @@ changelog:
     - Merge branch
     - go mod tidy
 archives:
-  - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+  - name_template: "{{ .ProjectName }}-{{ .Version }}.{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     replacements:
       darwin: darwin
       linux: linux
@@ -55,5 +55,6 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
+    wrap_in_directory: true
 release:
   prerelease: auto
