@@ -76,6 +76,48 @@ func TestEmptyStats(t *testing.T) {
 	compare(t, resp, "empty_stats")
 }
 
+func TestInboundRTP(t *testing.T) {
+	resp := `{
+		"environment": "[x86_64] macOS Version 10.15.7 (Build 19H15)",
+		"libwebrtc": "Shiguredo-Build M88.4324@{#3} (88.4324.3.0 b15b2915)",
+		"stats": [
+			{
+				"bytesReceived": 10278549,
+				"codecId": "RTCCodec_video_qDqHgY_Inbound_120",
+				"decoderImplementation": "libvpx",
+				"firCount": 0,
+				"frameHeight": 720,
+				"frameWidth": 1280,
+				"framesDecoded": 2111,
+				"framesDropped": 0,
+				"framesPerSecond": 14,
+				"framesReceived": 2112,
+				"headerBytesReceived": 156448,
+				"id": "RTCInboundRTPVideoStream_2189915641",
+				"isRemote": false,
+				"keyFramesDecoded": 1,
+				"kind": "video",
+				"lastPacketReceivedTimestamp": 4270.359,
+				"mediaType": "video",
+				"nackCount": 67,
+				"packetsLost": 0,
+				"packetsReceived": 9778,
+				"pliCount": 0,
+				"qpSum": 291917,
+				"ssrc": 2189915641,
+				"timestamp": 1609585297509136,
+				"totalDecodeTime": 3.831,
+				"totalInterFrameDelay": 160.8540000000006,
+				"totalSquaredInterFrameDelay": 26.77570400000011,
+				"trackId": "RTCMediaStreamTrack_receiver_3",
+				"transportId": "RTCTransport_video_Nl0AIE_1",
+				"type": "inbound-rtp"
+			}
+		]
+	}`
+	compare(t, resp, "inbound_rtp")
+}
+
 func TestOutboundRTP(t *testing.T) {
 	resp := `{
 		"version": "WebRTC Native Client Momo 2020.11 (db9d97e)",

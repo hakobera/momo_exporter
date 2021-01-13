@@ -1,0 +1,60 @@
+# HELP momo_exporter_json_parse_failures_total Number of failures while parsing JSON.
+# TYPE momo_exporter_json_parse_failures_total counter
+momo_exporter_json_parse_failures_total 0
+# HELP momo_exporter_scrapes_total Current total momo scrapes.
+# TYPE momo_exporter_scrapes_total counter
+momo_exporter_scrapes_total 1
+# HELP momo_inbound_rtp_bytes_received_total Total number of bytes received for this SSRC.
+# TYPE momo_inbound_rtp_bytes_received_total counter
+momo_inbound_rtp_bytes_received_total{codecId="RTCCodec_video_qDqHgY_Inbound_120",decoderImplementation="libvpx",id="RTCInboundRTPVideoStream_2189915641",kind="video"} 1.0278549e+07
+# HELP momo_inbound_rtp_decode_time_total Total number of seconds that have been spent decoding the framesDecoded frames of this stream.
+# TYPE momo_inbound_rtp_decode_time_total counter
+momo_inbound_rtp_decode_time_total{codecId="RTCCodec_video_qDqHgY_Inbound_120",decoderImplementation="libvpx",id="RTCInboundRTPVideoStream_2189915641",kind="video"} 3.831
+# HELP momo_inbound_rtp_fir_count_total Total number of Full Intra Request (FIR) packets sent by this receiver.
+# TYPE momo_inbound_rtp_fir_count_total counter
+momo_inbound_rtp_fir_count_total{codecId="RTCCodec_video_qDqHgY_Inbound_120",decoderImplementation="libvpx",id="RTCInboundRTPVideoStream_2189915641",kind="video"} 0
+# HELP momo_inbound_rtp_frame_height Height of the last decoded frame.
+# TYPE momo_inbound_rtp_frame_height gauge
+momo_inbound_rtp_frame_height{codecId="RTCCodec_video_qDqHgY_Inbound_120",decoderImplementation="libvpx",id="RTCInboundRTPVideoStream_2189915641",kind="video"} 720
+# HELP momo_inbound_rtp_frame_width Width of the last decoded frame.
+# TYPE momo_inbound_rtp_frame_width gauge
+momo_inbound_rtp_frame_width{codecId="RTCCodec_video_qDqHgY_Inbound_120",decoderImplementation="libvpx",id="RTCInboundRTPVideoStream_2189915641",kind="video"} 1280
+# HELP momo_inbound_rtp_frames_decoded_total Total number of frames correctly decoded for this RTP stream.
+# TYPE momo_inbound_rtp_frames_decoded_total counter
+momo_inbound_rtp_frames_decoded_total{codecId="RTCCodec_video_qDqHgY_Inbound_120",decoderImplementation="libvpx",id="RTCInboundRTPVideoStream_2189915641",kind="video"} 2111
+# HELP momo_inbound_rtp_frames_per_second Number of decoded frames in the last second.
+# TYPE momo_inbound_rtp_frames_per_second gauge
+momo_inbound_rtp_frames_per_second{codecId="RTCCodec_video_qDqHgY_Inbound_120",decoderImplementation="libvpx",id="RTCInboundRTPVideoStream_2189915641",kind="video"} 14
+# HELP momo_inbound_rtp_frames_received_total Total number of complete frames received on this RTP stream.
+# TYPE momo_inbound_rtp_frames_received_total counter
+momo_inbound_rtp_frames_received_total{codecId="RTCCodec_video_qDqHgY_Inbound_120",decoderImplementation="libvpx",id="RTCInboundRTPVideoStream_2189915641",kind="video"} 2112
+# HELP momo_inbound_rtp_header_bytes_received_total Total number of RTP header and padding bytes received for this SSRC.
+# TYPE momo_inbound_rtp_header_bytes_received_total counter
+momo_inbound_rtp_header_bytes_received_total{codecId="RTCCodec_video_qDqHgY_Inbound_120",decoderImplementation="libvpx",id="RTCInboundRTPVideoStream_2189915641",kind="video"} 156448
+# HELP momo_inbound_rtp_key_frames_decoded_total Total number of key frames successfully decoded for this RTP media stream.
+# TYPE momo_inbound_rtp_key_frames_decoded_total counter
+momo_inbound_rtp_key_frames_decoded_total{codecId="RTCCodec_video_qDqHgY_Inbound_120",decoderImplementation="libvpx",id="RTCInboundRTPVideoStream_2189915641",kind="video"} 1
+# HELP momo_inbound_rtp_nack_count_total Total number of Negative ACKnowledgement (NACK) packets sent by this receiver.
+# TYPE momo_inbound_rtp_nack_count_total counter
+momo_inbound_rtp_nack_count_total{codecId="RTCCodec_video_qDqHgY_Inbound_120",decoderImplementation="libvpx",id="RTCInboundRTPVideoStream_2189915641",kind="video"} 67
+# HELP momo_inbound_rtp_packets_received_total Total number of RTP packets received for this SSRC.
+# TYPE momo_inbound_rtp_packets_received_total counter
+momo_inbound_rtp_packets_received_total{codecId="RTCCodec_video_qDqHgY_Inbound_120",decoderImplementation="libvpx",id="RTCInboundRTPVideoStream_2189915641",kind="video"} 9778
+# HELP momo_inbound_rtp_pli_count_total Total number of Picture Loss Indication (PLI) packets sent by this receiver.
+# TYPE momo_inbound_rtp_pli_count_total counter
+momo_inbound_rtp_pli_count_total{codecId="RTCCodec_video_qDqHgY_Inbound_120",decoderImplementation="libvpx",id="RTCInboundRTPVideoStream_2189915641",kind="video"} 0
+# HELP momo_inbound_rtp_qp_sum Sum of the QP values of frames decoded by this receiver.
+# TYPE momo_inbound_rtp_qp_sum counter
+momo_inbound_rtp_qp_sum{codecId="RTCCodec_video_qDqHgY_Inbound_120",decoderImplementation="libvpx",id="RTCInboundRTPVideoStream_2189915641",kind="video"} 291917
+# HELP momo_inbound_rtp_samples_received_total Total number of samples that have been received on this RTP stream.
+# TYPE momo_inbound_rtp_samples_received_total counter
+momo_inbound_rtp_samples_received_total{codecId="RTCCodec_video_qDqHgY_Inbound_120",decoderImplementation="libvpx",id="RTCInboundRTPVideoStream_2189915641",kind="video"} 0
+# HELP momo_inbound_rtp_sli_count_total Total number of Slice Loss Indication (SLI) packets sent by this receiver.
+# TYPE momo_inbound_rtp_sli_count_total counter
+momo_inbound_rtp_sli_count_total{codecId="RTCCodec_video_qDqHgY_Inbound_120",decoderImplementation="libvpx",id="RTCInboundRTPVideoStream_2189915641",kind="video"} 0
+# HELP momo_up Was the last scrape of WebRTC Native Client Momo successful.
+# TYPE momo_up gauge
+momo_up 1
+# HELP momo_version_info WebRTC Native Client Momo version info.
+# TYPE momo_version_info gauge
+momo_version_info{environment="[x86_64] macOS Version 10.15.7 (Build 19H15)",libwebrtc="Shiguredo-Build M88.4324@{#3} (88.4324.3.0 b15b2915)",version=""} 1
